@@ -1,172 +1,95 @@
-import EventEmitter from 'events';
-import {promisify} from 'util';
-import Keyv, {type KeyvStoreAdapter, type StoredData} from 'keyv';
-import sqlite3 from 'sqlite3';
-import {
-	type Db, type DbClose, type DbQuery, type KeyvSqliteOptions,
-} from './types';
+import pkg from 'sqlite3';
+const { Database } = pkg;
+import type { Database as DatabaseType } from 'sqlite3';
+import { KeyvStoreAdapter } from '@keyc/core';
 
-const toString = (input: string) => String(input).search(/^[a-zA-Z]+$/) < 0 ? '_' + input : input;
+export class SQLiteAdapter<T = any> implements KeyvStoreAdapter<T> {
+  private db: DatabaseType;
+  
+  constructor(filename: string = ':memory:') {
+    this.db = new Database(filename);
+    this.init().catch(console.error);
+  }
 
-export class KeyvSqlite extends EventEmitter implements KeyvStoreAdapter {
-	ttlSupport: boolean;
-	opts: KeyvSqliteOptions;
-	namespace?: string;
-	close: DbClose;
-	query: DbQuery;
+  private async init() {
+    await this.exec(`
+      CREATE TABLE IF NOT EXISTS keyc (
+        key TEXT PRIMARY KEY,
+        value TEXT,
+        expires INTEGER
+      );
+      CREATE INDEX IF NOT EXISTS idx_expires ON keyc(expires);
+    `);
+  }
 
-	constructor(keyvOptions?: KeyvSqliteOptions | string) {
-		super();
-		this.ttlSupport = false;
-		let options: KeyvSqliteOptions = {
-			dialect: 'sqlite',
-			uri: 'sqlite://:memory:',
-		};
+  private exec(sql: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.exec(sql, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  }
 
-		if (typeof keyvOptions === 'string') {
-			options.uri = keyvOptions;
-		} else {
-			options = {
-				...options,
-				...keyvOptions,
-			};
-		}
+  async get(key: string): Promise<T | undefined> {
+    return new Promise((resolve, reject) => {
+      this.db.get(
+        'SELECT value FROM keyc WHERE key = ? AND (expires IS NULL OR expires > ?)',
+        [key, Date.now()],
+        (err, row: any) => {
+          if (err) reject(err);
+          else resolve(row ? JSON.parse(row.value) : undefined);
+        }
+      );
+    });
+  }
 
-		options.db = options.uri!.replace(/^sqlite:\/\//, '');
+  async set(key: string, value: T, ttl?: number): Promise<void> {
+    const expires = ttl ? Date.now() + ttl : null;
+    return new Promise((resolve, reject) => {
+      this.db.run(
+        'INSERT OR REPLACE INTO keyc (key, value, expires) VALUES (?, ?, ?)',
+        [key, JSON.stringify(value), expires],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+  }
 
-		options.connect = async () => new Promise((resolve, reject) => {
-			const database = new sqlite3.Database(options.db!, error => {
-				/* c8 ignore next 2 */
-				if (error) {
-					reject(error);
-				} else {
-					if (options.busyTimeout) {
-						database.configure('busyTimeout', options.busyTimeout);
-					}
+  async delete(key: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.db.run('DELETE FROM keyc WHERE key = ?', [key], function(err) {
+        if (err) reject(err);
+        else resolve(this.changes > 0);
+      });
+    });
+  }
 
-					resolve(database);
-				}
-			});
-		})
-			// @ts-expect-error - db is unknown
-			.then(database => ({query: promisify(database.all).bind(database), close: promisify(database.close).bind(database)}));
+  async clear(): Promise<void> {
+    return this.exec('DELETE FROM keyc');
+  }
 
-		this.opts = {
-			table: 'keyv',
-			keySize: 255,
-			...options,
-		};
+  async has(key: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.db.get(
+        'SELECT 1 FROM keyc WHERE key = ? AND (expires IS NULL OR expires > ?)',
+        [key, Date.now()],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(!!row);
+        }
+      );
+    });
+  }
 
-		this.opts.table = toString(this.opts.table!);
-
-		const createTable = `CREATE TABLE IF NOT EXISTS ${this.opts.table}(key VARCHAR(${Number(this.opts.keySize)}) PRIMARY KEY, value TEXT )`;
-
-		// @ts-expect-error - db is
-		const connected: Promise<DB> = this.opts.connect!()
-			.then(async database => database.query(createTable).then(() => database as Db))
-			.catch(error => this.emit('error', error));
-
-		this.query = async (sqlString, ...parameter) => connected
-			.then(async database => database.query(sqlString, ...parameter));
-
-		this.close = async () => connected.then(database => database.close);
-	}
-
-	async get<Value>(key: string) {
-		const select = `SELECT * FROM ${this.opts.table!} WHERE key = ?`;
-		const rows = await this.query(select, key);
-		const row = rows[0];
-		if (row === undefined) {
-			return undefined;
-		}
-
-		return row.value as Value;
-	}
-
-	async getMany<Value>(keys: string[]) {
-		const select = `SELECT * FROM ${this.opts.table!} WHERE key IN (SELECT value FROM json_each(?))`;
-		const rows = await this.query(select, JSON.stringify(keys));
-
-		return keys.map(key => {
-			const row = rows.find((row: {key: string; value: Value}) => row.key === key);
-			return (row ? row.value : undefined) as StoredData<Value | undefined>;
-		});
-	}
-
-	async set(key: string, value: any) {
-		const upsert = `INSERT INTO ${this.opts.table!} (key, value)
-			VALUES(?, ?) 
-			ON CONFLICT(key) 
-			DO UPDATE SET value=excluded.value;`;
-		return this.query(upsert, key, value);
-	}
-
-	async delete(key: string) {
-		const select = `SELECT * FROM ${this.opts.table!} WHERE key = ?`;
-		const del = `DELETE FROM ${this.opts.table!} WHERE key = ?`;
-
-		const rows = await this.query(select, key);
-		const row = rows[0];
-		if (row === undefined) {
-			return false;
-		}
-
-		await this.query(del, key);
-		return true;
-	}
-
-	async deleteMany(keys: string[]) {
-		const del = `DELETE FROM ${this.opts.table!} WHERE key IN (SELECT value FROM json_each(?))`;
-
-		const results = await this.getMany(keys);
-		if (results.every(x => x === undefined)) {
-			return false;
-		}
-
-		await this.query(del, JSON.stringify(keys));
-		return true;
-	}
-
-	async clear() {
-		const del = `DELETE FROM ${this.opts.table!} WHERE key LIKE ?`;
-		await this.query(del, this.namespace ? `${this.namespace}:%` : '%');
-	}
-
-	async * iterator(namespace?: string) {
-		const limit = Number.parseInt(this.opts.iterationLimit! as string, 10) || 10;
-
-		// @ts-expect-error - iterate
-		async function * iterate(offset: number, options: KeyvSqliteOptions, query: any) {
-			const select = `SELECT * FROM ${options.table!} WHERE key LIKE ? LIMIT ? OFFSET ?`;
-			const iterator = await query(select, [`${namespace ? namespace + ':' : ''}%`, limit, offset]);
-			const entries = [...iterator];
-			if (entries.length === 0) {
-				return;
-			}
-
-			for (const entry of entries) {
-				offset += 1;
-				yield [entry.key, entry.value];
-			}
-
-			yield * iterate(offset, options, query);
-		}
-
-		yield * iterate(0, this.opts, this.query);
-	}
-
-	async has(key: string) {
-		const exists = `SELECT EXISTS ( SELECT * FROM ${this.opts.table!} WHERE key = ? )`;
-		const result = await this.query(exists, key);
-		return Object.values(result[0])[0] === 1;
-	}
-
-	async disconnect() {
-		await this.close();
-	}
-}
-
-export const createKeyv = (keyvOptions?: KeyvSqliteOptions | string) => new Keyv({store: new KeyvSqlite(keyvOptions)});
-
-export default KeyvSqlite;
-export type {KeyvSqliteOptions} from './types';
+  async close(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.close((err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  }
+} 
