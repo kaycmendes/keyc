@@ -2,12 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
-    "declaration": true,
-    "declarationDir": "dist"
+    "rootDir": "src"
   },
   "references": [
     { "path": "../keyc" }
   ],
   "include": ["src"]
-}
+} 
