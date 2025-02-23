@@ -7222,7 +7222,112 @@ if im pushing why am i not seeing any changes on my gh account
 
 _**Assistant**_
 
+When you push, Git only sends committed changes—not any modifications that are still uncommitted or untracked. Here are some things to check:
 
+1. **Uncommitted Changes:**  
+   Your `git status` output shows many modified and untracked files. Until you add and commit these changes, they won’t be part of your branch history.
+
+2. **Branch Pushed:**  
+   Ensure you are pushing to the branch you expect on GitHub. If you’re working on a branch like `release/v1.0.0`, the changes will appear on that branch on GitHub. They won’t automatically show up on `main` until you merge the branch.
+
+3. **Remote Repository:**  
+   Double-check that your push command was successful and that you’re looking at the right repository and branch on GitHub.
+
+**Steps to See Your Changes on GitHub:**
+
+- **Stage and commit your changes:**
+  ```bash
+  git add .
+  git commit -m "Describe your changes here"
+  ```
+- **Push your branch:**
+  ```bash
+  git push origin release/v1.0.0
+  ```
+- **Merge (if needed):**  
+  If you want them on `main`, either open a pull request on GitHub or merge locally:
+  ```bash
+  git checkout main
+  git merge release/v1.0.0
+  git push origin main
+  ```
+
+Once committed and pushed, your changes will be visible in your GitHub repository on the corresponding branch.
+
+---
+
+_**User**_
+
+why did my contributions not apperar on github
+
+---
+
+_**Assistant**_
+
+Below is an explanation of several common reasons why your contributions might not appear on GitHub, along with steps to verify and resolve the issue.
+
+---
+
+## Common Reasons and Resolutions
+
+1. **Uncommitted or Unpushed Changes**
+
+   - **Issue:** Only commits that have been added (staged) and committed, then pushed to GitHub will appear on your contributions graph.
+   - **Action:**  
+     - Run `git status` to check for uncommitted changes.
+     - Stage and commit any changes:
+       ```bash
+       git add .
+       git commit -m "Your commit message"
+       ```
+     - Push your branch:
+       ```bash
+       git push origin your-branch-name
+       ```
+
+2. **Commits on a Non-Merged Branch**
+
+   - **Issue:** If your commits are on a branch (e.g., `release/v1.0.0`) that hasn’t been merged into the default branch (like `main` or `master`), they might not show up in your contribution graph.
+   - **Action:**  
+     Merge your branch into the default branch or create a pull request from GitHub to merge the changes.
+
+3. **Incorrect Author Email**
+
+   - **Issue:** GitHub uses the commit author’s email to associate commits with your GitHub account. If your commits use an email that isn’t linked to your GitHub account, those contributions won’t be counted.
+   - **Action:**  
+     - Check your commit details:
+       ```bash
+       git log --pretty=format:'%an <%ae>' -n 5
+       ```
+     - If needed, update your Git config to use the correct email:
+       ```bash
+       git config --global user.email "your_email@domain.com"
+       ```
+     - Rewriting past commits requires caution (using tools like `git rebase` or `git filter-branch`) if you need to update commit author info.
+
+4. **Repository Visibility and Contribution Settings**
+
+   - **Issue:** Contributions are only counted for public repositories or for private contributions if you’ve enabled that setting in your GitHub profile.
+   - **Action:**  
+     - Verify that your repository is public, or enable private contributions in your [GitHub settings](https://github.com/settings/profile).
+     - Make sure you’re looking at the correct repository on GitHub.
+
+5. **Delayed Updates**
+
+   - **Issue:** Sometimes there is a short delay between pushing commits and GitHub updating the contributions graph.
+   - **Action:**  
+     - Wait a little while and refresh your GitHub profile to see if your contributions update.
+
+---
+
+## Summary
+
+- **Ensure your changes are committed and pushed** to the correct branch.
+- **Merge your branch** into the default branch if you want your commits to be reflected on your profile.
+- **Verify that your commit author email** matches one of the emails associated with your GitHub account.
+- **Review your repository settings** for visibility and contribution settings.
+
+By following the above steps, you can help ensure that your contributions appear correctly on your GitHub account. Let me know if you need further assistance!
 
 ---
 
