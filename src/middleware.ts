@@ -1,3 +1,7 @@
+/**
+ * Middleware interface for Keyc
+ * Provides hooks for intercepting and modifying operations
+ */
 export interface Middleware {
   name: string;
   // Hook functions
@@ -9,6 +13,10 @@ export interface Middleware {
   postDelete?: (key: string, result: boolean) => Promise<void> | void;
 }
 
+/**
+ * Middleware pipeline implementation
+ * Manages middleware execution order and flow
+ */
 export class MiddlewarePipeline {
   private middlewares: Middleware[] = [];
   
