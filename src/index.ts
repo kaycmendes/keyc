@@ -16,4 +16,9 @@ export { MessagePackCompressor } from './compressors/msgpack';
 export { LoggerMiddleware } from './middlewares/logger';
 
 // Export adapters
-export { CloudflareKVAdapter } from './adapters/cloudflare-kv'; 
+export { CloudflareKVAdapter } from './adapters/cloudflare-kv';
+export { RedisAdapter } from './adapters/redis';
+export { SQLiteAdapter } from './adapters/sqlite';
+
+// Type exports
+export { KeycOptions, GetOptions } from './keyc'; 
