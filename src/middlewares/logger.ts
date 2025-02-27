@@ -1,5 +1,9 @@
 import { Middleware } from '../middleware';
 
+/**
+ * Logger middleware for Keyc
+ * Provides logging capabilities for key operations
+ */
 export class LoggerMiddleware implements Middleware {
   name = 'logger';
   
