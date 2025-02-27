@@ -1,20 +1,21 @@
 import { Compressor } from './base';
-import msgpack from 'msgpackr';
+import * as msgpack from 'msgpackr';
 
 export class MessagePackCompressor implements Compressor {
-  private encoder: msgpack.Encoder;
+  private encoder: any;
   
-  constructor(options: msgpack.EncoderOptions = {}) {
-    this.encoder = new msgpack.Encoder(options);
+  constructor(options: Record<string, any> = {}) {
+    // Use a type assertion to avoid TypeScript errors
+    this.encoder = new msgpack.Encoder(options as any);
   }
   
-  compress(data: any): Buffer {
+  async compress(data: any): Promise<Buffer> {
     return this.encoder.encode(data);
   }
   
-  decompress(data: Buffer): any {
+  async decompress(data: Buffer): Promise<any> {
     return msgpack.decode(data);
   }
 }
 
-export default MessagePackCompressor; 
+export default MessagePackCompressor;
