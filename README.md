@@ -2,8 +2,12 @@
 
 > A modern, TypeScript-first key-value storage with middleware, compression, and edge computing support
 
-[![npm](https://img.shields.io/npm/dm/keyc.svg)](https://www.npmjs.com/package/keyc)
-[![npm](https://img.shields.io/npm/v/keyc.svg)](https://www.npmjs.com/package/keyc)
+[![npm version](https://img.shields.io/npm/v/keyc.svg)](https://www.npmjs.com/package/keyc)
+[![npm downloads](https://img.shields.io/npm/dm/keyc.svg)](https://www.npmjs.com/package/keyc)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/keyc)](https://bundlephobia.com/package/keyc)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-4.9+-blue)](https://www.typescriptlang.org/)
+[![Node.js Version](https://img.shields.io/node/v/keyc.svg)](https://nodejs.org/en/)
 
 # Keyc
 
