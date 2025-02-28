@@ -9,7 +9,7 @@
 
 A modern, TypeScript-first key-value storage library with middleware, compression, and edge computing support.
 
-Keyc is a fork and modernization of [Keyv](https://github.com/jaredwray/keyv), designed to provide enhanced features, better performance, and improved TypeScript support.
+Keyc is inspired by [Keyv](https://github.com/jaredwray/keyv), redesigned to provide enhanced features, better performance, and improved TypeScript support.
 
 ## Features
 
@@ -150,7 +150,7 @@ const cache = new Keyc({
 });
 
 // Data is automatically compressed and decompressed
-await cache.set('bigObject', { ... });
+await cache.set('bigObject', { /* large object */ });
 ```
 
 ## Atomic Operations
@@ -204,18 +204,6 @@ cache.on('set', (key, value) => console.log(`Cache set: ${key}`));
 cache.on('delete', key => console.log(`Cache delete: ${key}`));
 cache.on('clear', () => console.log('Cache cleared'));
 ```
-
-## Differences from Keyv
-
-Keyc builds on Keyv with important improvements:
-
-- Enhanced TypeScript support with proper generic typing
-- Middleware system for extending functionality
-- MessagePack compression for better performance
-- Atomic operations like increment/decrement
-- Optimized for edge computing environments
-- Improved event system
-- Better performance with batch operations
 
 ## License
 
