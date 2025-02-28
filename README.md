@@ -1,6 +1,4 @@
-<h1 align="center"><img width="250" src="https://jaredwray.com/images/keyc.svg" alt="keyc"></h1>
-
-> A modern, TypeScript-first key-value storage with middleware, compression, and edge computing support
+ A modern, TypeScript-first key-value storage with middleware, compression, and edge computing support
 
 [![npm version](https://img.shields.io/npm/v/keyc.svg)](https://www.npmjs.com/package/keyc)
 [![npm downloads](https://img.shields.io/npm/dm/keyc.svg)](https://www.npmjs.com/package/keyc)
