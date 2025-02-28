@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
-    "module": "CommonJS",
+    "target": "ES2020",
+    "module": "NodeNext",
     "declaration": true,
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
-    "lib": ["ES2018", "DOM"],
-    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "NodeNext",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true
   },
