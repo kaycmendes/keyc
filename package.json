@@ -1,5 +1,5 @@
 {
-  "name": "keyc",
+  "name": "@ninjapermeter/keyc",
   "version": "0.1.0",
   "description": "A modern, TypeScript-first key-value storage with middleware, compression, and edge computing support",
   "main": "dist/index.js",
